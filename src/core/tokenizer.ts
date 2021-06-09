@@ -1,4 +1,4 @@
-import { Stream, Token, register, instruction } from '../mod.ts';
+import { Stream, Token, register, instruction, data } from '../mod.ts';
 
 export class Tokenizer {
     private input: string;
@@ -19,36 +19,6 @@ export class Tokenizer {
             let char = this.input[this.idx];
 
             switch (char) {
-                case '`': {
-                    this.tokens.push(['Grave', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '~': {
-                    this.tokens.push(['Wave', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '!': {
-                    this.tokens.push(['Not', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '@': {
-                    this.tokens.push(['At', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '#': {
-                    this.tokens.push(['Hash', char]);
-                    this.idx += 1;
-                    break;
-                }
-
                 case '$': {
                     let reg = char;
                     this.idx += 1;
@@ -72,51 +42,9 @@ export class Tokenizer {
                     break;
                 }
 
-                case '%': {
-                    this.tokens.push(['Modulus', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '^': {
-                    this.tokens.push(['Caret', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '&': {
-                    this.tokens.push(['And', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '*': {
-                    this.tokens.push(['Multiply', char]);
-                    this.idx += 1;
-                    break;
-                }
-
                 case '(':
                 case ')': {
                     this.tokens.push(['Paren', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '-': {
-                    this.tokens.push(['Minus', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '=': {
-                    this.tokens.push(['Equal', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '+': {
-                    this.tokens.push(['Plus', char]);
                     this.idx += 1;
                     break;
                 }
@@ -135,33 +63,23 @@ export class Tokenizer {
                     break;
                 }
 
-                case '|': {
-                    this.tokens.push(['Pipe', char]);
+                case '"':
+                case '\'': {
+                    const quote = char;
+                    let val = '';
                     this.idx += 1;
-                    break;
-                }
+                    char = this.input[this.idx];
 
-                case ':': {
-                    this.tokens.push(['Colon', char]);
-                    this.idx += 1;
-                    break;
-                }
+                    while (char !== quote) {
+                        val += char;
+                        this.idx += 1;
+                        char = this.input[this.idx];
+                    }
 
-                case ';': {
-                    this.tokens.push(['Semi', char]);
                     this.idx += 1;
-                    break;
-                }
+                    char = this.input[this.idx];
+                    this.tokens.push(['String', val])
 
-                case '<': {
-                    this.tokens.push(['Less', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '>': {
-                    this.tokens.push(['More', char]);
-                    this.idx += 1;
                     break;
                 }
 
@@ -173,12 +91,6 @@ export class Tokenizer {
 
                 case '.': {
                     this.tokens.push(['Dot', char]);
-                    this.idx += 1;
-                    break;
-                }
-
-                case '?': {
-                    this.tokens.push(['Question', char]);
                     this.idx += 1;
                     break;
                 }
@@ -234,28 +146,34 @@ export class Tokenizer {
                     }
 
                     else if ((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')) {
-                        let inst = char;
+                        let wrd = char;
                         this.idx += 1;
 
                         if (this.idx < this.input.length) {
                             char = this.input[this.idx];
 
-                            while ((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')) {
-                                inst += char;
+                            while ((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || char === '_') {
+                                wrd += char;
                                 this.idx += 1;
                                 char = this.input[this.idx];
                             }
                         }
 
-                        if (instruction.includes(inst)) {
-                            this.tokens.push(['Instruction', inst])
-                        } else {
-                            throw new Error(`[x16_x]: [Assembler(Hogen)]: No such instruction: ${inst}`)
+                        if (instruction.includes(wrd)) {
+                            this.tokens.push(['Instruction', wrd])
+                        }
+                        
+                        else if (data.includes(wrd)) {
+                            this.tokens.push(['Data', wrd])
+                        }
+                        
+                        else {
+                            this.tokens.push(['Variable', wrd]);
                         }
                     }
 
                     else {
-                        throw new Error(`[x16_x]: [Assembler(Hogen)]: Unknown character: ${char}`);
+                        throw new Error(`[x16_x]: [Assembler(Hogen)]: Invalid or unsupported character: ${char}`);
                     }
                 }
             }
