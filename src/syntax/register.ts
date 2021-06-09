@@ -1,0 +1,1 @@
+export const register: string[] = Array.from({ length: 8 }, (_, i) => `$r${i + 1}`);
